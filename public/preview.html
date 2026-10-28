@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>preview</title>
+<style>html,body{margin:0;background:#1a2a18;overflow:hidden}canvas{display:block}</style>
+</head><body>
+<script type="module">
+import * as THREE from './js/lib/three.module.js';
+import { buildDeer, buildHunter, buildWendigo } from './js/models.js';
+
+const W = window.innerWidth, H = window.innerHeight;
+const r = new THREE.WebGLRenderer({ antialias: true });
+r.setPixelRatio(2); r.setSize(W, H);
+document.body.appendChild(r.domElement);
+
+const scene = new THREE.Scene();
+const which = new URLSearchParams(location.search).get('c') || 'deer';
+const night = which === 'wendigo';
+
+scene.background = new THREE.Color(night ? 0x2a0a10 : 0x8fc7e8);
+scene.fog = new THREE.Fog(night ? 0x2a0a10 : 0x8fc7e8, 14, 40);
+
+const sun = new THREE.DirectionalLight(0xfff2d0, night ? 0.8 : 1.7);
+sun.position.set(6, 10, 7); scene.add(sun);
+scene.add(new THREE.HemisphereLight(night ? 0x8a2a35 : 0xbfe4ff, night ? 0x301015 : 0x3f6a2e, night ? 0.7 : 0.9));
+if (night) { const rim = new THREE.DirectionalLight(0xff5a44, 1.1); rim.position.set(-6, 4, -6); scene.add(rim); }
+
+// жер
+const g = new THREE.Mesh(new THREE.CircleGeometry(30, 40),
+  new THREE.MeshLambertMaterial({ color: night ? 0x3a2024 : 0x58a03f }));
+g.rotation.x = -Math.PI / 2; scene.add(g);
+// чөп
+const blade = new THREE.BufferGeometry();
+blade.setAttribute('position', new THREE.BufferAttribute(new Float32Array([
+  -0.045,0,0, 0.045,0,0, 0,0.6,0 ]), 3));
+blade.computeVertexNormals();
+const gm = new THREE.InstancedMesh(blade,
+  new THREE.MeshLambertMaterial({ color: night ? 0x4a2a2e : 0x6fc045, side: THREE.DoubleSide }), 1400);
+const d = new THREE.Object3D();
+for (let i = 0; i < 1400; i++) {
+  const a = Math.random() * 6.28, rr = 1.6 + Math.random() * 14;
+  d.position.set(Math.cos(a) * rr, 0, Math.sin(a) * rr);
+  d.rotation.y = Math.random() * 6.28;
+  d.scale.set(1, 0.6 + Math.random(), 1);
+  d.updateMatrix(); gm.setMatrixAt(i, d.matrix);
+}
+scene.add(gm);
+
+const model = which === 'hunter' ? buildHunter()
+            : which === 'wendigo' ? buildWendigo()
+            : buildDeer(Math.random, { male: true });
+scene.add(model.group);
+
+const h = which === 'deer' ? 1.0 : which === 'hunter' ? 1.1 : 1.4;
+const dist = which === 'deer' ? 5.2 : which === 'hunter' ? 4.6 : 6.0;
+const cam = new THREE.PerspectiveCamera(42, W / H, 0.1, 100);
+
+let t = 0;
+function frame() {
+  requestAnimationFrame(frame);
+  t += 0.016;
+  model.group.rotation.y = -0.65;
+  const aim = new URLSearchParams(location.search).get('aim');
+  model.setAnim(aim ? 'aim' : (which === 'deer' ? 'walk' : 'idle'), 0.016);
+  cam.position.set(Math.cos(0.6) * dist, h + 1.3, Math.sin(0.6) * dist);
+  cam.lookAt(0, h, 0);
+  r.render(scene, cam);
+}
+frame();
+window.__ready = true;
+</script>
+</body></html>

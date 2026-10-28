@@ -1,0 +1,25 @@
+mutation SeedData @transaction @auth(expr: "auth.token.admin == true") {
+  user_insertMany(data: [
+    { email: "alice@example.com", displayName: "Alice" },
+    { email: "bob@example.com", displayName: "Bob" },
+    { email: "charlie@example.com", displayName: "Charlie" }
+  ])
+  workspace_insertMany(data: [
+    { name: "Dev Workspace", owner: { id: "00000000-0000-0000-0000-000000000001" } },
+    { name: "Design Workspace", owner: { id: "00000000-0000-0000-0000-000000000002" } }
+  ])
+  task_insertMany(data: [
+    { title: "Fix Auth", status: "TODO", workspace: { id: "00000000-0000-0000-0000-000000000001" } },
+    { title: "Design Logo", status: "IN_PROGRESS", workspace: { id: "00000000-0000-0000-0000-000000000002" } },
+    { title: "Write Docs", status: "TODO", workspace: { id: "00000000-0000-0000-0000-000000000001" } }
+  ])
+  tag_insertMany(data: [
+    { name: "Urgent", color: "#FF0000", workspace: { id: "00000000-0000-0000-0000-000000000001" } },
+    { name: "Feature", color: "#00FF00", workspace: { id: "00000000-0000-0000-0000-000000000001" } },
+    { name: "Review", color: "#0000FF", workspace: { id: "00000000-0000-0000-0000-000000000002" } }
+  ])
+  taskTag_insertMany(data: [
+    { taskId: "00000000-0000-0000-0000-000000000001", tagId: "00000000-0000-0000-0000-000000000001" },
+    { taskId: "00000000-0000-0000-0000-000000000002", tagId: "00000000-0000-0000-0000-000000000003" }
+  ])
+}

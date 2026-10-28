@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="ky">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0e1a0e">
+<title>Түнкү Токой</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<canvas id="scene"></canvas>
+<div id="hurt"></div>
+<div id="deathFade"></div>
+
+<!-- Телефонду жантайтууну сурануу -->
+<div id="rotate">
+  <div class="phone"><span>⟳</span></div>
+  <div class="txt">Телефонду <b>жантайта</b> кармаңыз</div>
+  <div class="sub2">оюн альбомдук көрүнүштө ойнолот</div>
+</div>
+
+<!-- ============ ЖҮКТӨӨ ============ -->
+<div id="loading" class="screen">
+  <div class="logo">ТҮНКҮ ТОКОЙ</div>
+  <div class="sub">бугулардын арасына жашын</div>
+  <div class="bar" id="loadbarwrap"><i id="loadbar"></i></div>
+  <div class="tip" id="loadtip">токой өстүрүлүүдө…</div>
+  <button id="btnGate" class="bigbtn hidden">▶ БАШТОО</button>
+  <div class="tip hidden" id="gateTip">үнү менен ойнолот — телефонду жантайт</div>
+</div>
+
+<!-- ============ ТРЕЙЛЕР ============ -->
+<div id="intro" class="hidden">
+  <div class="bar top"></div>
+  <div class="bar bottom"></div>
+  <div id="introText"></div>
+  <button id="btnSkip">Өткөрүп жиберүү ▸</button>
+</div>
+
+<!-- ============ БАШКЫ МЕНЮ ============ -->
+<div id="menu" class="screen hidden">
+  <div class="menuwrap">
+    <div class="brand">
+      <div class="logo glow">ТҮНКҮ ТОКОЙ</div>
+      <div class="sub">10 бугунун арасында 1 мергенчи</div>
+    </div>
+
+    <div class="cards">
+      <button id="btnQuick" class="mcard">
+        <span class="mic">⚡</span>
+        <span class="mtitle">БЫСТРАЯ ИГРА</span>
+        <span class="mdesc">Жалгыз ойноо. Бугу же мергенчи болуп,
+          10 бот бугунун арасында.</span>
+      </button>
+      <button id="btnTeam" class="mcard alt">
+        <span class="mic">👥</span>
+        <span class="mtitle">КОМАНДА МЕНЕН</span>
+        <span class="mdesc">Бир Wi-Fi'да достор менен. Бөлмө түзүп,
+          шилтемени жөнөтөсүң.</span>
+      </button>
+    </div>
+
+    <div class="menufoot">
+      <button id="btnRules" class="linkbtn">📖 Эреже</button>
+      <button id="btnReplayIntro" class="linkbtn">🎬 Трейлер</button>
+      <span class="ver">v2 · Oh Deer стилинде</span>
+    </div>
+  </div>
+</div>
+
+<!-- ============ РОЛ ТАНДОО (жалгыз ойноо) ============ -->
+<div id="roleSelect" class="screen hidden">
+  <div class="logo small">КИМ БОЛОСУҢ?</div>
+  <div class="roles">
+    <button class="rolecard" data-role="deer">
+      <div class="ic">🦌</div>
+      <div class="nm">БУГУ</div>
+      <div class="ds">10 бот бугунун арасына жашынып, мергенчиден аман кал.
+        Курсагыңды козу карын менен толтур.</div>
+    </button>
+    <button class="rolecard" data-role="hunter">
+      <div class="ic">🏹</div>
+      <div class="nm">МЕРГЕНЧИ</div>
+      <div class="ds">Бот бугулардын арасынан «адамча» кыймылдагандарын тап.
+        Жаңылсаң акыл-эсиң түшөт.</div>
+    </button>
+  </div>
+  <div class="row">
+    <button id="btnRoleBack" class="linkbtn">← Артка</button>
+    <button id="btnRoleGo"   class="bigbtn" disabled>БАШТОО</button>
+  </div>
+</div>
+
+<!-- ============ КОМАНДА (Wi-Fi) ============ -->
+<div id="lobby" class="screen hidden">
+  <div class="logo small">КОМАНДА МЕНЕН</div>
+
+  <!-- Сервер жок болсо (мис. Live Server) — эскертүү -->
+  <div id="srvWarn" class="hidden">
+    <b>⚠️ Оюн сервери иштебей жатат</b>
+    <p>Бул барак <b>Live Server</b> (же башка жөнөкөй сервер) аркылуу ачылган окшойт.
+    Ал файлдарды гана берет — команда менен ойноо үчүн оюндун өз сервери керек.</p>
+    <div class="step"><b>1</b> VS Code'до: <code>Terminal → New Terminal</code></div>
+    <div class="step"><b>2</b> Жаз: <code>node server.js</code></div>
+    <div class="step"><b>3</b> Терминал берген дарек менен ач:
+      <code id="warnUrl">http://localhost:8080</code></div>
+    <p class="small">⚡ <b>Быстрая игра</b> Live Server менен да иштей берет —
+    серверди талап кылбайт.</p>
+  </div>
+
+  <div id="netModeNote" class="hidden"></div>
+
+  <!-- 1-кадам: эмне кылам? -->
+  <div id="lobbyPick">
+    <div class="fields">
+      <label>Атың<input id="inpName" maxlength="14" placeholder="Оюнчу" autocomplete="off"></label>
+    </div>
+    <div class="cards">
+      <button id="btnCreate" class="mcard">
+        <span class="mic">🏠</span>
+        <span class="mtitle">БӨЛМӨ ТҮЗҮҮ</span>
+        <span class="mdesc">Сен хост болосуң. Код жана QR чыгат —
+          досторуң ошону менен кирет.</span>
+      </button>
+      <button id="btnJoin" class="mcard alt">
+        <span class="mic">🚪</span>
+        <span class="mtitle">БӨЛМӨГӨ КИРҮҮ</span>
+        <span class="mdesc">Досуң түзгөн бөлмөнүн кодун жазып кошуласың.</span>
+      </button>
+    </div>
+    <div class="wifihelp">
+      <b>📶 Wi-Fi кантип иштейт</b>
+      <div class="step"><b>1</b> Сервер <b>бир</b> компьютерде иштейт: <code>node server.js</code></div>
+      <div class="step"><b>2</b> Телефондордун баары <b>ошол эле Wi-Fi'да</b> болушу керек</div>
+      <div class="step"><b>3</b> Досторуң эч нерсе орнотпойт — браузерден шилтемени ачат</div>
+    </div>
+  </div>
+
+  <!-- 2-кадам (кирүү): кодду жазуу -->
+  <div id="lobbyJoin" class="hidden">
+    <div class="roomsub">Досуң берген бөлмө кодун жаз:</div>
+    <div class="fields">
+      <label>Бөлмө коду<input id="inpRoom" maxlength="8" placeholder="TOKOI" autocomplete="off"></label>
+    </div>
+    <button id="btnConnect" class="bigbtn">КОШУЛУУ</button>
+    <div class="hint" id="netHint">
+      Эгер «байланыш жок» десе — хосттун компьютеринде <code>node server.js</code>
+      иштеп турганын жана экөөң бир Wi-Fi'да экениңди текшер.
+    </div>
+    <button id="btnJoinBack" class="linkbtn">← Артка</button>
+  </div>
+
+  <!-- 3-кадам: бөлмөнүн ичи -->
+  <div id="lobbyRoom" class="hidden">
+    <div class="roomtop">
+      <div class="roombig">БӨЛМӨ <b id="roomCode">—</b></div>
+      <div class="sharerow">
+        <div class="qrbox">
+          <canvas id="qrCanvas"></canvas>
+          <span>камера менен скандат</span>
+        </div>
+        <div class="sharecol">
+          <div class="roomsub">Же ушул шилтемени жибер:</div>
+          <div class="linkbox">
+            <input id="shareUrl2" readonly>
+            <button id="btnCopy2" class="pick">📋 Көчүрүү</button>
+          </div>
+          <div class="hint">Телефондо ачып → 👥 КОМАНДА МЕНЕН → 🚪 БӨЛМӨГӨ КИРҮҮ
+            → кодду <code id="roomCode2">—</code> деп жазат.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="randnote">🎲 <b>Мергенчи ар бир раундда кокустан тандалат</b>
+      — калганыңар бугу болосуңар. Кезек менен ар кимге тиет.</div>
+    <div id="playerList" class="plist"></div>
+    <div class="row">
+      <button id="btnLeave" class="linkbtn">← Чыгуу</button>
+      <button id="btnHostStart" class="bigbtn hidden">БАШТОО</button>
+      <span id="waitHost" class="hint">Хост баштаганын күт…</span>
+    </div>
+  </div>
+
+  <button id="btnLobbyBack" class="linkbtn">← Башкы меню</button>
+</div>
+
+<!-- ============ ЭРЕЖЕ ============ -->
+<div id="rules" class="screen hidden">
+  <div class="logo small">ЭРЕЖЕ</div>
+  <div class="rulebox">
+    <div class="col">
+      <b>🦌 Бугу</b>
+      <p>Сен 10 бот бугунун арасындасың. Мергенчи «кайсынысы адам?» деп аңдыйт.
+      Бот бугулардай жүр: оттоп тур, акырын бас. Көп чуркасаң байкалып каласың.</p>
+      <p><b>Ачкачылык</b> түшүп турат — ✋ менен козу карын же. Ачка калсаң жай басасың.</p>
+      <p><b>💨</b> — мергенчини башка жакка алаксытат.</p>
+    </div>
+    <div class="col">
+      <b>🏹 Мергенчи</b>
+      <p>Раунд башталганда 15 секунд капаста турасың. Чыккандан кийин
+      оюнчу-бугуларды таап атышың керек.</p>
+      <p><b>Акыл-эс</b> (Sanity) жай түшөт. <b>Жаңылып бот бугуну атсаң — кескин түшөт.</b>
+      Нөл болсо — бугулар <b style="color:#e8554a">вендигого</b> айланып сени аңдыйт.</p>
+      <p>🏹 бир басканда жаа тартылат, экинчи басканда атылат.</p>
+    </div>
+    <div class="col">
+      <b>🌑 Түн</b>
+      <p>Белгиленген убакта токой <b>2 секундда кескин караңгы</b> болот.
+      Жаркыраган өсүмдүктөр гана көрүнөт.</p>
+      <p>Бугулар таңга чейин аман калса — <b>бугулар жеңет</b>.</p>
+    </div>
+  </div>
+  <button id="btnRulesBack" class="linkbtn">← Артка</button>
+</div>
+
+<!-- ============ HUD ============ -->
+<div id="hud" class="hidden">
+
+  <div id="topleft">
+    <div id="clock">
+      <div class="day" id="phaseLbl">КҮНДҮЗ</div>
+      <div class="time" id="timeLbl">2:30</div>
+    </div>
+    <div id="stats">
+      <div class="statrow hunterOnly"><span class="lbl">❤️</span><div class="track hp"><i id="hpFill"></i></div></div>
+      <div class="statrow deerOnly"><span class="lbl">🍗</span><div class="track hg"><i id="hungerFill"></i></div></div>
+    </div>
+  </div>
+
+  <!-- Мергенчинин акыл-эси (видеодогудай) -->
+  <div id="sanityBox">
+    <div class="name" id="sanityName">Акыл-эс</div>
+    <div class="track"><i id="sanityFill"></i></div>
+  </div>
+
+  <div id="resources">
+    <div class="res hunterOnly"><span class="ic">🏹</span><b id="cntArrow">3</b></div>
+    <div class="res hunterOnly"><span class="ic">📷</span><b id="cntCam">6</b></div>
+    <div class="res"><span class="ic">🦌</span><b id="cntDeer">3</b></div>
+  </div>
+  <div id="cabinHint" class="hidden">🏚️ Үйгө чейин <b id="cabinDist">0</b> м</div>
+
+  <button id="btnMute" title="Үн">🔊</button>
+  <div id="crosshair"></div>
+  <div id="toast"></div>
+  <div id="bigmsg"></div>
+
+  <div id="stickZone"><div id="stickBase"><div id="stickKnob"></div></div></div>
+
+  <div id="buttons">
+    <button class="rbtn small" id="btnJump">⤒</button>
+    <button class="rbtn small deerOnly" id="btnFart">💨</button>
+    <button class="rbtn big" id="btnFire">🏹</button>
+    <button class="rbtn small" id="btnUse">✋</button>
+  </div>
+
+  <div id="handLabel"></div>
+  <div id="eatBar"><i id="eatFill"></i></div>
+</div>
+
+<!-- ============ ЖЫЙЫНТЫК ============ -->
+<div id="endScreen" class="screen hidden">
+  <div class="logo" id="endTitle">БҮТТҮ</div>
+  <div class="sub" id="endText"></div>
+  <div class="row">
+    <button id="btnAgain" class="bigbtn">ДАГЫ ОЙНОО</button>
+    <button id="btnToMenu" class="linkbtn">Башкы меню</button>
+  </div>
+</div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

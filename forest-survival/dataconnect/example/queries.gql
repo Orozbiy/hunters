@@ -1,0 +1,79 @@
+mutation CreateWorkspace($name: String!, $description: String) @auth(level: USER) {
+  workspace_insert(data: { name: $name, description: $description, owner: { id_expr: "auth.uid" } })
+}
+
+mutation UpdateWorkspace($id: UUID!, $name: String) @auth(level: USER) {
+  workspace_update(key: { id: $id }, data: { name: $name })
+}
+
+mutation DeleteWorkspace($id: UUID!) @auth(level: USER) {
+  workspace_delete(key: { id: $id })
+}
+
+query GetWorkspace($id: UUID!) @auth(level: USER) {
+  workspace(key: { id: $id }) { name description }
+}
+
+query ListWorkspaces @auth(level: USER) {
+  workspaces(where: { ownerId: { eq_expr: "auth.uid" } }) { name id }
+}
+
+mutation CreateTask($title: String!, $status: String!, $workspaceId: UUID!, $description: String) @auth(level: USER) {
+  task_insert(data: { title: $title, status: $status, workspaceId: $workspaceId, description: $description })
+}
+
+mutation UpdateTask($id: UUID!, $status: String) @auth(level: USER) {
+  task_update(key: { id: $id }, data: { status: $status })
+}
+
+mutation DeleteTask($id: UUID!) @auth(level: USER) {
+  task_delete(key: { id: $id })
+}
+
+query GetTask($id: UUID!) @auth(level: USER) {
+  task(key: { id: $id }) { title status description }
+}
+
+query ListTasks($workspaceId: UUID!) @auth(level: USER) {
+  tasks(where: { workspaceId: { eq: $workspaceId } }) { title status }
+}
+
+mutation CreateTag($name: String!, $color: String!, $workspaceId: UUID!) @auth(level: USER) {
+  tag_insert(data: { name: $name, color: $color, workspaceId: $workspaceId })
+}
+
+mutation UpdateTag($id: UUID!, $color: String) @auth(level: USER) {
+  tag_update(key: { id: $id }, data: { color: $color })
+}
+
+mutation DeleteTag($id: UUID!) @auth(level: USER) {
+  tag_delete(key: { id: $id })
+}
+
+query GetTag($id: UUID!) @auth(level: USER) {
+  tag(key: { id: $id }) { name color }
+}
+
+query ListTags($workspaceId: UUID!) @auth(level: USER) {
+  tags(where: { workspaceId: { eq: $workspaceId } }) { name color }
+}
+
+mutation AssignTaskTag($taskId: UUID!, $tagId: UUID!) @auth(level: USER) {
+  taskTag_insert(data: { taskId: $taskId, tagId: $tagId })
+}
+
+mutation RemoveTaskTag($taskId: UUID!, $tagId: UUID!) @auth(level: USER) {
+  taskTag_delete(key: { taskId: $taskId, tagId: $tagId })
+}
+
+query ListTaskTags($taskId: UUID!) @auth(level: USER) {
+  taskTags(where: { taskId: { eq: $taskId } }) { tag { name } }
+}
+
+mutation UpsertUser($displayName: String!, $email: String!) @auth(level: USER) {
+  user_upsert(data: { id_expr: "auth.uid", displayName: $displayName, email: $email })
+}
+
+query GetCurrentUser @auth(level: USER) {
+  user(key: { id_expr: "auth.uid" }) { email displayName bio avatarUrl }
+}
